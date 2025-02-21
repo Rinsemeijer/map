@@ -15,8 +15,8 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize the map and set its view to be more centered over Struer Town
-        var map = L.map('map').setView([56.4916, 8.5834], 13); // Adjusted center closer to Struer Town
+        // Initialize the map and set its view 20% further south of Struer Town
+        var map = L.map('map').setView([56.4810, 8.5834], 13); // Adjusted further south
 
         // Add a high-contrast light grayscale map
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
