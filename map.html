@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Map with Leaflet</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map and set its view to Struer Town with a closer zoom
+        var map = L.map('map').setView([56.4912, 8.5916], 12); // Centered over Struer
+
+        // Add a high-contrast light grayscale map
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Fetch data from the API
+        fetch('https://api.elnet.greenpowerdenmark.dk/api/incidents?supplierId=41')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("API response:", data); // Debugging log
+                if (!data || !Array.isArray(data)) {
+                    throw new Error("Unexpected API response format: Expected an array.");
+                }
+                if (data.length > 0) {
+                    var bounds = L.latLngBounds(); // Create bounds to fit all incidents
+                }
+                let incidentsFound = false;
+                data.forEach(incident => {
+                    if (incident.latitude && incident.longitude) {
+                        var lat = parseFloat(incident.latitude);
+                        var lon = parseFloat(incident.longitude);
+
+                        // Validate lat/lon
+                        if (isNaN(lat) || isNaN(lon)) {
+                            console.warn("Invalid latitude or longitude values:", incident);
+                            return;
+                        }
+
+                        // Create a marker and add it to the map
+                        var marker = L.marker([lat, lon])
+                            .addTo(map)
+                            .bindPopup(`<b>${incident.title || 'No Title'}</b><br>${incident.description || 'No Description'}`);
+                        
+                        bounds.extend([lat, lon]); // Extend bounds with each marker
+                        incidentsFound = true;
+                    } else {
+                        console.warn("Incident missing latitude or longitude:", incident);
+                    }
+                });
+                
+                // Fit the map to the bounds of the incidents if any exist
+                if (incidentsFound) {
+                    map.fitBounds(bounds);
+                } else {
+                    console.warn("No incidents found in the API response.");
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                alert('Failed to load incident data. Please check the API response.');
+            });
+    </script>
+</body>
+</html>
